@@ -1,65 +1,89 @@
-import Image from "next/image";
+// ----- INÍCIO DO CÓDIGO -----
 
-export default function Home() {
+// No Next.js (App Router), podemos tornar a nossa página "async" (assíncrona)
+// para que ela possa esperar por dados (como os do nosso backend).
+
+// 1. Criamos uma função separada para buscar os dados
+async function getBackendData() {
+  try {
+    // IMPORTANTE: Esta chamada 'fetch' acontece NO SERVIDOR, 
+    // não no navegador do utilizador.
+    // Estamos a ligar ao nosso NestJS que está em http://localhost:3001
+    const res = await fetch('http://localhost:3001', { 
+        cache: 'no-store' // Diz ao Next.js para não guardar esta resposta em cache
+    });
+
+    if (!res.ok) {
+      // Se a resposta do servidor for um erro (ex: 500)
+      throw new Error('Falha ao buscar dados do backend');
+    }
+
+    // Convertemos a resposta em JSON
+    return res.json();
+
+  } catch (error) {
+    console.error('ERRO AO BUSCAR DADOS DO BACKEND:', error);
+    // Se o nosso NestJS estiver desligado, o 'fetch' vai falhar
+    // e vamos cair neste 'catch'.
+    return { error: 'Não foi possível ligar ao backend. O servidor NestJS está a correr?' };
+  }
+}
+
+
+// 2. A nossa página agora é 'async'
+export default async function Home() {
+  
+  // 3. Chamamos a função e esperamos (await) que os dados cheguem
+  const data = await getBackendData();
+
+  // 'data' será algo como: { message: '...', author: '...' }
+  // OU será: { error: '...' } se algo falhar
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#111',
+      color: '#EEE'
+    }}>
+      
+      <h1>Bem-vindo ao Meu Portfólio Full-Stack!</h1>
+      
+      <div style={{
+        marginTop: '40px',
+        padding: '20px 40px',
+        border: '1px solid #555',
+        borderRadius: '8px',
+        backgroundColor: '#222',
+        textAlign: 'center'
+      }}>
+        
+        <h3 style={{ marginTop: '0', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
+          Mensagem do Meu Back-end (NestJS):
+        </h3>
+        
+        {/* 4. Verificamos se 'data' contém um erro */}
+        {data.error ? (
+          // Se tiver erro, mostramos a mensagem de erro
+          <p style={{ color: '#FF6B6B' }}>{data.error}</p>
+        ) : (
+          // Se não tiver erro, mostramos os dados!
+          <>
+            <p style={{ fontSize: '1.2rem', color: '#00D8FF' }}>
+              "{data.message}"
+            </p>
+            <p style={{ color: '#999' }}>
+              - Assinado: {data.author}
+            </p>
+          </>
+        )}
+      </div>
+
+    </main>
   );
 }
+// ----- FIM DO CÓDIGO -----
